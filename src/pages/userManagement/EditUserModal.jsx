@@ -1,18 +1,17 @@
 import "./styles/userManagement.css";
 import { useState } from "react";
 
-export default function NewUserModal({ close, addUser }) {
-  const [user, setUser] = useState({ 
-    name: "", 
-    email: "", 
-    role: "Viewer", 
-    location: "" 
+export default function EditUserModal({ close, editUser }) {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    role: "Viewer",
+    location: ""
   });
 
   const handleSubmit = () => {
-    if (user.name && user.email) {
-      addUser(user);
-      close();
+    if (formData.name && formData.email) {
+      editUser(formData);
     } else {
       alert("Please fill in all required fields");
     }
@@ -21,31 +20,31 @@ export default function NewUserModal({ close, addUser }) {
   return (
     <div className="modal-overlay" onClick={close}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-        <h3 className="modal-title">Create New User</h3>
+        <h3 className="modal-title">Edit User</h3>
 
         <div className="modal-input-group">
           <input 
             className="modal-input" 
             placeholder="Full Name *" 
-            value={user.name}
-            onChange={(e) => setUser({ ...user, name: e.target.value })} 
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
           />
           <input 
             className="modal-input" 
             placeholder="Email *" 
-            value={user.email}
-            onChange={(e) => setUser({ ...user, email: e.target.value })} 
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
           />
           <input 
             className="modal-input" 
             placeholder="Location" 
-            value={user.location}
-            onChange={(e) => setUser({ ...user, location: e.target.value })} 
+            value={formData.location}
+            onChange={(e) => setFormData({ ...formData, location: e.target.value })} 
           />
           <select 
             className="modal-select" 
-            value={user.role}
-            onChange={(e) => setUser({ ...user, role: e.target.value })}
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
           >
             <option value="Admin">Admin</option>
             <option value="Contributor">Contributor</option>
@@ -55,7 +54,7 @@ export default function NewUserModal({ close, addUser }) {
 
         <div className="modal-actions">
           <button className="modal-btn-cancel" onClick={close}>Cancel</button>
-          <button className="modal-btn-create" onClick={handleSubmit}>Create</button>
+          <button className="modal-btn-create" onClick={handleSubmit}>Save Changes</button>
         </div>
       </div>
     </div>

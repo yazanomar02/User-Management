@@ -1,11 +1,75 @@
-import { useState, useMemo } from 'react';
-import { useReactTable, getCoreRowModel, getPaginationRowModel, getFilteredRowModel, getSortedRowModel, flexRender } from '@tanstack/react-table';
-import { users } from './data';
+import { useState, useMemo, useEffect } from 'react';
+import { useReactTable, getCoreRowModel, getPaginationRowModel, getSortedRowModel, flexRender } from '@tanstack/react-table';
 import { ActionMenu } from './ActionMenu';
 
-export default function UsersTable() {
-  const [globalFilter, setGlobalFilter] = useState('');
+export default function UsersTable({ users, globalFilter, roleFilter, joinedFilter, removeUser, editUser, patchUser }) {
   const [sorting, setSorting] = useState([]);
+  const [filteredData, setFilteredData] = useState(users);
+
+  useEffect(() => {
+    let result = users;
+
+    if (globalFilter) {
+      const lowercasedFilter = globalFilter.toLowerCase();
+      result = result.filter(user =>
+        user.name.toLowerCase().includes(lowercasedFilter) ||
+        user.email.toLowerCase().includes(lowercasedFilter) ||
+        user.location.toLowerCase().includes(lowercasedFilter)
+      );
+    }
+
+    if (roleFilter !== 'all') {
+      const lowercasedFilter = roleFilter.toLowerCase();
+      result = result.filter(user => user.role.toLowerCase().includes(lowercasedFilter));
+    }
+
+    if (joinedFilter !== 'Anytime') {
+      const currentDate = new Date();
+      const currentYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth();
+
+      result = result.filter(user => {
+        const joinedYear = extractYearFromDate(user.joined);
+        const joinedMonth = extractMonthFromDate(user.joined);
+
+        if (joinedFilter === 'Last Year') {
+          return joinedYear === currentYear - 1;
+        }
+
+        if (joinedFilter === 'Last Month') {
+          let targetMonth = currentMonth - 1;
+          let targetYear = currentYear;
+
+          if (targetMonth < 0) {
+            targetMonth = 11;
+            targetYear = currentYear - 1;
+          }
+
+          return joinedYear === targetYear && joinedMonth === targetMonth;
+        }
+
+        return true;
+      });
+    }
+
+    setFilteredData(result);
+  }, [globalFilter, roleFilter, joinedFilter, users]);
+
+  function extractYearFromDate(dateString) {
+    const yearMatch = dateString.match(/\b(\d{4})\b/);
+    return yearMatch ? parseInt(yearMatch[1]) : null;
+  }
+
+  function extractMonthFromDate(dateString) {
+    const months = {
+      'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
+      'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11
+    };
+
+    const monthMatch = dateString.toLowerCase().match(/(january|february|march|april|may|june|july|august|september|october|november|december)/);
+    return monthMatch ? months[monthMatch[0]] : null;
+  }
+
 
   const columns = useMemo(() => [
     {
@@ -74,22 +138,24 @@ export default function UsersTable() {
     {
       id: 'actions',
       header: '',
-      cell: () => <ActionMenu />,
+      cell: ({ row }) => <ActionMenu
+        userId={row.original.id}
+        onDelete={removeUser}
+        onEdit={editUser}
+        onPatch={patchUser}
+      />,
       size: 80,
     },
   ], []);
 
   const table = useReactTable({
-    data: users,
+    data: filteredData,
     columns,
     state: {
-      globalFilter,
       sorting,
     },
-    onGlobalFilterChange: setGlobalFilter,
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
